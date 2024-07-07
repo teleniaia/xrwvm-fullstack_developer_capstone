@@ -88,17 +88,67 @@ def get_cars(request):
     return JsonResponse({"CarModels":cars})
 # # Update the `get_dealerships` view to render the index page with
 # a list of dealerships
-# def get_dealerships(request):
-# ...
+def get_dealerships(request):
+    if request.method == "GET":
+        context = {}
+        url = "http://localhost:3000/dealerships/get"
 
-# Create a `get_dealer_reviews` view to render the reviews of a dealer
-# def get_dealer_reviews(request,dealer_id):
-# ...
+        # Get dealers from the URL
+        dealerships = get_dealers_from_cf(url)
 
-# Create a `get_dealer_details` view to render the dealer details
-# def get_dealer_details(request, dealer_id):
-# ...
+        context["dealers"] = dealerships
 
-# Create a `add_review` view to submit a review
-# def add_review(request):
-# ...
+        return render(request, 'djangoapp/index.html', context)
+
+
+def get_dealer_details(request, id):
+    if request.method == "GET":
+        url = "http://localhost:5000/api/get_reviews"
+        dealer_reviews = get_dealer_reviews_from_cf(url, id)
+        context = {
+            "reviews": dealer_reviews
+        }
+
+        return render(request, 'djangoapp/dealer_details.html', context)
+
+
+
+# submit a review
+def add_review(request):
+
+    if request.method == "GET":
+        url = "http://localhost:3000/dealerships/get"
+        cars = get_dealers_from_cf(url)
+        context = {
+            "cars": cars
+        }
+        return render(request, 'djangoapp/add_review.html', context)
+
+    if request.method == "POST":
+        csrf_token = get_token(request)
+
+        url = "http://localhost:5000/api/post_review"
+        review = {
+            "id": 1114,
+            "name": "Upkar Lidder",
+            "dealership": 15,
+            "review": "Great service!",
+            "purchase": False,
+            "another": "field",
+            "purchase_date": "02/16/2021",
+            "car_make": "Audi",
+            "car_model": "Car",
+            "car_year": 2021
+        }
+
+        headers = {
+            "X-CSRFToken": csrf_token
+        }
+
+        status = post_request(url, json_payload=review, headers=headers)
+        if status:
+            return HttpResponse("Review added successfully")
+        else:
+            return HttpResponse("Failed to add review")
+    else:
+        return HttpResponse("Failed to add review")
