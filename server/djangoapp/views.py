@@ -5,8 +5,7 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 from .populate import initiate
 from .models import CarMake, CarModel
-from .restapis import get_request, post_review
-
+from .restapis import get_request, analyze_review_sentiments, post_review
 import logging
 
 logger = logging.getLogger(__name__)
@@ -87,10 +86,12 @@ def get_cars(request):
 
 
 def get_dealerships(request, state="All"):
-    endpoint = "/fetchDealers" if state == "All" else "/fetchDealers/" + state
+    if (state == "All"):
+        endpoint = "/fetchDealers"
+    else:
+        endpoint = "/fetchDealers/"+state
     dealerships = get_request(endpoint)
-    return JsonResponse(dealerships)
-
+    return JsonResponse({"status": 200, "dealers": dealerships})
 
 def get_dealer_details(request, dealer_id):
     endpoint = f"/fetchDealerDetails/{dealer_id}"
